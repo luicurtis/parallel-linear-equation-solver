@@ -1,0 +1,21 @@
+cd ../../mnt/c/Users/adaml/CMPT431/project431
+
+
+tar -xvzf
+
+
+SCP:
+scp -P 24 curve_area_parallel.cpp ala193@cs-cloud.cs.surrey.sfu.ca:/home/ala193/431Assignment6
+scp -P 24 heat_transfer_parallel.cpp ala193@cs-cloud.cs.surrey.sfu.ca:/home/ala193/431Assignment6
+
+SSH Steps:
+1. VPN
+2.  ssh -p 24 ala193@cs-cloud.cs.surrey.sfu.ca
+
+
+tail +0
+
+sbatch job1.sh
+make curve_area_parallel
+make heat_transfer_parallel
+
