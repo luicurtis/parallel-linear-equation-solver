@@ -1,0 +1,8 @@
+# Ignore all files without extension
+*
+!/**/
+!*.*
+!Makefile
+# Ignore all hidden files
+.*
+.out
