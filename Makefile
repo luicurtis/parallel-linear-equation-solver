@@ -1,16 +1,12 @@
 
-ifdef USE_INT
-MACRO = -DUSE_INT
-endif
-
 #compiler setup
 CXX = g++
 MPICXX = mpic++
 CXXFLAGS = -std=c++14 -O3 $(MACRO)
 
 COMMON= core/utils.h core/cxxopts.h core/get_time.h
-SERIAL= generate test
-PARALLEL= curve_area_parallel heat_transfer_parallel
+SERIAL= generate linear_eqn_solver_serial
+PARALLEL= linear_eqn_solver_parallel
 ALL= $(SERIAL) $(PARALLEL)
 
 all : $(ALL)
