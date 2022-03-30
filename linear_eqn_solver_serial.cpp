@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
   auto cl_options = options.parse(argc, argv);
   std::string input_file_path = cl_options["inputFile"].as<std::string>();
 
-  std::cout << "Number of Threads : 0" << std::endl;
+  std::cout << "Number of Threads : 1" << std::endl;
   std::cout << "Creating Empty 1000 x 1000 Matrix\n";
   // allocate input matrix
   double** mat = new double*[size];
