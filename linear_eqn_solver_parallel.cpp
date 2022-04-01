@@ -155,6 +155,8 @@ void forwardElim(double** mat, int tid, int start, int end, double* time_taken,
 
 // function to calculate the values of the unknowns
 void backSub(double** mat) {
+  timer t;
+  double back_sub_time_taken = 0.0;
   double x[size];  // An array to store solution
 
   // calculate variables from bottom row to top row
@@ -171,9 +173,14 @@ void backSub(double** mat) {
     // divide the RHS by the coefficient of the variable being calculated
     x[i] = x[i] / mat[i][i];
   }
+  
+  back_sub_time_taken = t.stop();
 
   printf("\nSolution for the system:\n");
   for (int i = 0; i < size; i++) printf("%lf\n", round(x[i]));
+
+  std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken << "\n";
+
 }
 
 int main(int argc, char* argv[]) {
