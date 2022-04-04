@@ -98,6 +98,8 @@ void backSub(double** mat) {
   double back_sub_time_taken = 0.0;
   double x[size];  // An array to store solution
 
+  t.start();
+
   // calculate variables from bottom row to top row
   for (int i = size - 1; i >= 0; i--) {
     x[i] = mat[i][size];
