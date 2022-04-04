@@ -197,7 +197,7 @@ void forwardElimDynamic(double** mat, int tid, double* time_taken,
           mat[currRow][j] -= mat[pivot][j] * f;
         }
         mat[currRow][pivot] = 0;
-        
+
         row_processed++;
         currRow++;
         if (currRow >= size) break;
@@ -210,7 +210,61 @@ void forwardElimDynamic(double** mat, int tid, double* time_taken,
   *n_row_processed = row_processed;
 }
 
-// function to get matrix content
+void forwardElimEqual(double** mat, int tid, double* time_taken,
+                      CustomBarrier* barrier, std::atomic<bool>& singular_flag,
+                      int* n_row_processed, uint n_threads) {
+  timer t;
+  int row_processed = 0;
+  t.start();
+
+  for (int pivot = 0; pivot < size; pivot++) {
+    // T0 needs to make sure pivot is non zero
+    if (mat[pivot][pivot] == 0 && tid == 0) {
+      // swap with non zero row
+      int swapIndex = -1;
+      for (int i = pivot + 1; i < size; i++) {
+        if (mat[i][pivot] != 0) {
+          swapIndex = i;
+        }
+      }
+      if (swapIndex == -1) {
+        singular_flag = true;
+        barrier->wait();
+        break;  // Matrix is singular
+      }
+      swap_row(mat, pivot, swapIndex);
+    }
+
+    // If pivot is 0, all other threads need to wait until T0 swaps the rows
+    barrier->wait();
+    if (singular_flag == true) break;
+
+    // Determine how many rows to compute
+    int min_rows_per_process = (size - pivot - 1) / n_threads;
+    int excess_rows = (size - pivot - 1) % n_threads;
+    int start = (min_rows_per_process * tid) + pivot + 1;
+    int end = (tid == n_threads - 1)
+                  ? (min_rows_per_process * (tid + 1)) + pivot + excess_rows
+                  : (min_rows_per_process * (tid + 1)) + pivot;
+
+    for (int currRow = start; currRow <= end; currRow++) {
+      // subtract f * pivot row from currRow to reduce mat[currRow][pivot] to
+      // 0
+      double f = mat[currRow][pivot] / mat[pivot][pivot];
+      // TODO: Make this calculation local and then replace the entire row
+      for (int j = pivot + 1; j <= size; j++) {
+        mat[currRow][j] -= mat[pivot][j] * f;
+      }
+      mat[currRow][pivot] = 0;
+      row_processed++;
+    }
+    barrier->wait();
+  }
+
+  *time_taken = t.stop();
+  *n_row_processed = row_processed;
+}
+
 void gaussian_elimination_parallel_static(double** mat, uint n_threads) {
   std::vector<std::thread> threads(n_threads);
 
@@ -330,6 +384,55 @@ void gaussian_elimination_parallel_dynamic(double** mat, uint n_threads,
   std::cout << "Total Time taken (in seconds) : " << time_taken << "\n";
 }
 
+void gaussian_elimination_parallel_equal(double** mat, uint n_threads) {
+  std::vector<std::thread> threads(n_threads);
+  std::vector<double> local_time_taken(n_threads, 0.0);
+  std::vector<int> rows_processed(n_threads, 0);
+  CustomBarrier barrier(n_threads);
+  std::atomic<bool> singular_flag(false);
+  timer t1;
+  double time_taken = 0.0;
+
+  // Create threads and distribute the work across T threads
+  // -------------------------------------------------------------------
+  t1.start();
+  for (int i = 0; i < n_threads; i++) {
+    threads.push_back(
+        std::thread(forwardElimEqual, mat, i, &local_time_taken[i], &barrier,
+                    std::ref(singular_flag), &rows_processed[i], n_threads));
+  }
+
+  for (std::thread& t : threads) {
+    if (t.joinable()) {
+      t.join();
+    }
+  }
+
+  if (singular_flag == true) {
+    printf("Singular Matrix.\n");
+    /* if the RHS of equation corresponding to
+       zero row  is 0, * system has infinitely
+       many solutions, else inconsistent*/
+    if (mat[singular_flag][size])
+      printf("Inconsistent System.");
+    else
+      printf("May have infinitely many solutions.");
+    return;
+  }
+
+  backSub(mat);
+
+  time_taken = t1.stop();
+  // -------------------------------------------------------------------
+
+  // Print Statistics
+  std::cout << "thread_id, num_rows, time_taken" << std::endl;
+  for (uint i = 0; i < n_threads; i++) {
+    std::cout << i << ", " << rows_processed[i] << ", " << local_time_taken[i]
+              << std::endl;
+  }
+  std::cout << "Total Time taken (in seconds) : " << time_taken << "\n";
+}
 int main(int argc, char* argv[]) {
   cxxopts::Options options(
       "linear_eqn_solver_parallel",
@@ -360,11 +463,12 @@ int main(int argc, char* argv[]) {
         "The commandline arguments: --nThreads must be at least 1\n");
   }
 
-  if (strategy <= 0 || strategy > 2) {
+  if (strategy <= 0 || strategy > 3) {
     throw std::invalid_argument(
         "The commandline argument: --strategy only accepts values 1 and 2 \n"
         "    1 represents static mapping execution\n"
-        "    2 represents dynamic mapping");
+        "    2 represents dynamic mapping\n"
+        "    3 represents equal mapping for every pivot");
   }
 
   if (k <= 0) {
@@ -402,6 +506,9 @@ int main(int argc, char* argv[]) {
       break;
     case 2:
       gaussian_elimination_parallel_dynamic(mat, n_threads, k);
+      break;
+    case 3:
+      gaussian_elimination_parallel_equal(mat, n_threads);
       break;
     default:
       gaussian_elimination_parallel_static(mat, n_threads);
