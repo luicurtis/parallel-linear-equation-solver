@@ -1004,6 +1004,5 @@ Solution for the system:
 1894.000000
 1896.000000
 1898.000000
-thread_id, starting row, ending row, time_taken
-0, 0, 999, 0.780037
-Total Time taken (in seconds) : 0.783217
+Back Sub Time taken (in seconds) : 0.00120902
+Total Time taken (in seconds) : 0.625231

@@ -1,4 +1,4 @@
-Number of Threads : 7
+Number of Threads : 1
 Creating Empty 1000 x 1000 Matrix
 Reading Input File : /home/cwlui/cmpt431-project/inputs/generated.txt
 1000 x 1000 Matrix Filled In
@@ -1004,12 +1004,5 @@ Solution for the system:
 1894.000000
 1896.000000
 1898.000000
-thread_id, starting row, ending row, time_taken
-0, 0, 142, 0.242541
-1, 143, 285, 0.242502
-2, 286, 428, 0.242449
-3, 429, 571, 0.242416
-4, 572, 714, 0.24241
-5, 715, 857, 0.242731
-6, 858, 999, 0.242315
-Total Time taken (in seconds) : 0.245904
+Back Sub Time taken (in seconds) : 0.00117803
+Total Time taken (in seconds) : 0.601461
