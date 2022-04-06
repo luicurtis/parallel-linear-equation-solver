@@ -14,12 +14,14 @@
 int forwardElim(double** mat);
 
 // function to calculate the values of the unknowns
-void backSub(double** mat);
+void backSub(double** mat, double (&x)[size], double *back_sub_time_taken);
 
 // function to get matrix content
 void gaussianElimination(double** mat) {
   timer t1;
   double time_taken = 0.0;
+  double x[size]; // An array to store solution
+  double back_sub_time_taken = 0.0;
 
   // -------------------------------------------------------------------
   t1.start();
@@ -38,11 +40,14 @@ void gaussianElimination(double** mat) {
 
     return;
   }
-  backSub(mat);
+  backSub(mat, x, &back_sub_time_taken);
 
   time_taken = t1.stop();
   // -------------------------------------------------------------------
   // Print Statistics
+  printf("\nSolution for the system:\n");
+  for (int i = 0; i < size; i++) printf("%lf\n", round(x[i]));
+  std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken << "\n";
   std::cout << "Total Time taken (in seconds) : " << time_taken << "\n";
 }
 
@@ -93,10 +98,8 @@ int forwardElim(double** mat) {
 }
 
 // function to calculate the values of the unknowns
-void backSub(double** mat) {
+void backSub(double** mat, double (&x)[size], double* back_sub_time_taken) {
   timer t;
-  double back_sub_time_taken = 0.0;
-  double x[size];  // An array to store solution
 
   t.start();
 
@@ -115,13 +118,7 @@ void backSub(double** mat) {
     x[i] = x[i] / mat[i][i];
   }
 
-  back_sub_time_taken = t.stop();
-
-  printf("\nSolution for the system:\n");
-  for (int i = 0; i < size; i++) printf("%lf\n", round(x[i]));
-
-  std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken << "\n";
-
+  *back_sub_time_taken = t.stop();
 }
 
 int main(int argc, char* argv[]) {

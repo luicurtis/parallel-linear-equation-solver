@@ -56,10 +56,8 @@ class DynamicMapping {
 };
 
 // function to calculate the values of the unknowns
-void backSub(double** mat) {
+void backSub(double** mat, double (&x)[size], double* back_sub_time_taken) {
   timer t;
-  double back_sub_time_taken = 0.0;
-  double x[size];  // An array to store solution
 
   t.start();
   // calculate variables from bottom row to top row
@@ -77,13 +75,7 @@ void backSub(double** mat) {
     x[i] = x[i] / mat[i][i];
   }
 
-  back_sub_time_taken = t.stop();
-
-  printf("\nSolution for the system:\n");
-  for (int i = 0; i < size; i++) printf("%lf\n", round(x[i]));
-
-  std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
-            << "\n";
+  *back_sub_time_taken = t.stop();
 }
 
 // function for elementary operation of swapping two rows
@@ -289,6 +281,9 @@ void gaussian_elimination_parallel_static(double** mat, uint n_threads) {
   std::atomic<bool> singular_flag(false);
   timer t1;
   double time_taken = 0.0;
+  double x[size]; // An array to store solution
+  double back_sub_time_taken = 0.0;
+
   // Create threads and distribute the work across T threads
   // -------------------------------------------------------------------
   t1.start();
@@ -316,14 +311,16 @@ void gaussian_elimination_parallel_static(double** mat, uint n_threads) {
     return;
   }
 
-  backSub(mat);
+  backSub(mat, x, &back_sub_time_taken);
 
   time_taken = t1.stop();
   // -------------------------------------------------------------------
 
   // Print Statistics
-  // TODO: Update stat output to indicate how many cummulative rows each thread
-  // computed
+  printf("\nSolution for the system:\n");
+  for (int i = 0; i < size; i++) printf("%lf\n", round(x[i]));
+  std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
+            << "\n";
   std::cout << "thread_id, starting row, ending row, time_taken" << std::endl;
   for (uint i = 0; i < n_threads; i++) {
     std::cout << i << ", " << start_row[i] << ", " << end_row[i] << ", "
@@ -342,6 +339,8 @@ void gaussian_elimination_parallel_dynamic(double** mat, uint n_threads,
   std::atomic<bool> singular_flag(false);
   timer t1;
   double time_taken = 0.0;
+  double x[size]; // An array to store solution
+  double back_sub_time_taken = 0.0;
 
   // Create threads and distribute the work across T threads
   // -------------------------------------------------------------------
@@ -370,12 +369,16 @@ void gaussian_elimination_parallel_dynamic(double** mat, uint n_threads,
     return;
   }
 
-  backSub(mat);
+  backSub(mat, x, &back_sub_time_taken);
 
   time_taken = t1.stop();
   // -------------------------------------------------------------------
 
   // Print Statistics
+  printf("\nSolution for the system:\n");
+  for (int i = 0; i < size; i++) printf("%lf\n", round(x[i]));
+  std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
+            << "\n";
   std::cout << "thread_id, num_rows, time_taken" << std::endl;
   for (uint i = 0; i < n_threads; i++) {
     std::cout << i << ", " << rows_processed[i] << ", " << local_time_taken[i]
@@ -392,6 +395,8 @@ void gaussian_elimination_parallel_equal(double** mat, uint n_threads) {
   std::atomic<bool> singular_flag(false);
   timer t1;
   double time_taken = 0.0;
+  double x[size]; // An array to store solution
+  double back_sub_time_taken = 0.0;
 
   // Create threads and distribute the work across T threads
   // -------------------------------------------------------------------
@@ -420,12 +425,16 @@ void gaussian_elimination_parallel_equal(double** mat, uint n_threads) {
     return;
   }
 
-  backSub(mat);
+  backSub(mat, x, &back_sub_time_taken);
 
   time_taken = t1.stop();
   // -------------------------------------------------------------------
 
   // Print Statistics
+  printf("\nSolution for the system:\n");
+  for (int i = 0; i < size; i++) printf("%lf\n", round(x[i]));
+  std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
+            << "\n";
   std::cout << "thread_id, num_rows, time_taken" << std::endl;
   for (uint i = 0; i < n_threads; i++) {
     std::cout << i << ", " << rows_processed[i] << ", " << local_time_taken[i]
