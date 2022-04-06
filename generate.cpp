@@ -11,7 +11,7 @@ using namespace std;
 int main() {
     std::random_device rd;
     std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> dist(-100.0, 110.0);
+    std::uniform_real_distribution<double> dist(-100000.0, 110000.0);
     int* variables = new int[1000];
     for (int i = 0; i < 1000; i++) {
         variables[i] = i*2 - 100;

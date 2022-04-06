@@ -5,4 +5,4 @@
 #SBATCH --mem=2G
 #SBATCH --partition=slow
 
-srun /home/cwlui/cmpt431-project/linear_eqn_solver_parallel --strategy 2 --nThreads 8 --granularity 100  --inputFile /home/cwlui/cmpt431-project/inputs/generated.txt
+srun /home/cwlui/cmpt431-project/linear_eqn_solver_parallel --strategy 3 --nThreads 8 --inputFile /home/cwlui/cmpt431-project/inputs/generated.txt
