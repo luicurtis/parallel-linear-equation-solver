@@ -14,13 +14,13 @@
 int forwardElim(double** mat);
 
 // function to calculate the values of the unknowns
-void backSub(double** mat, double (&x)[size], double *back_sub_time_taken);
+void backSub(double** mat, double (&x)[size], double* back_sub_time_taken);
 
 // function to get matrix content
 void gaussianElimination(double** mat, uint printSolution) {
   timer t1;
   double time_taken = 0.0;
-  double x[size]; // An array to store solution
+  double x[size];  // An array to store solution
   double back_sub_time_taken = 0.0;
 
   // -------------------------------------------------------------------
@@ -46,7 +46,7 @@ void gaussianElimination(double** mat, uint printSolution) {
   // -------------------------------------------------------------------
   // verify solution
   for (int i = 0; i < 1000; i++) {
-    assert(round(x[i]) == double(i*2 - 100));
+    assert(round(x[i]) == double(i * 2 - 100));
   }
 
   // Print Statistics
@@ -56,7 +56,8 @@ void gaussianElimination(double** mat, uint printSolution) {
   }
 
   std::cout << "Solution Validated\n";
-  std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken << "\n";
+  std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
+            << "\n";
   std::cout << "Total Time taken (in seconds) : " << time_taken << "\n";
 }
 
@@ -148,7 +149,8 @@ int main(int argc, char* argv[]) {
 
   if (printSolution > 1) {
     throw std::invalid_argument(
-      "The commandline argument: --printSolution can only be 0 (printing off) or 1 (printing on)");
+        "The commandline argument: --printSolution can only be 0 (printing "
+        "off) or 1 (printing on)");
   }
 
   std::cout << "Number of Threads : 1" << std::endl;
@@ -160,7 +162,7 @@ int main(int argc, char* argv[]) {
     mat[i] = mat[0] + i * (size + 1);
   }
 
-  std::cout << "Reading Input File : " << input_file_path<< "\n";
+  std::cout << "Reading Input File : " << input_file_path << "\n";
   // read input matrix from file
   // std::ifstream myfile("data.txt", std::ios_base::in);
   std::ifstream myfile(input_file_path, std::ios_base::in);
