@@ -99,10 +99,16 @@ void print(double** mat) {
 // function to reduce matrix to r.e.f.
 void forwardElimStatic(double** mat, int tid, int start, int end,
                        double* time_taken, CustomBarrier* barrier,
-                       std::atomic<bool>& singular_flag) {
+                       std::atomic<bool>& singular_flag, double *barrier1_time,
+                       double *barrier2_time) {
   timer t;
-  t.start();
+  timer b1;
+  timer b2;
+  double b1_time = 0.0;
+  double b2_time = 0.0;
 
+  t.start();
+  
   for (int pivot = 0; pivot < size; pivot++) {
     // T0 needs to make sure pivot is non zero
     if (mat[pivot][pivot] == 0 && tid == 0) {
@@ -123,7 +129,10 @@ void forwardElimStatic(double** mat, int tid, int start, int end,
     }
 
     // If pivot is 0, all other threads need to wait until T0 swaps the rows
+    b1.start();
     barrier->wait();
+    b1_time += b1.stop();
+
     if (singular_flag == true) break;
 
     if (pivot + 1 <= end) {
@@ -138,18 +147,28 @@ void forwardElimStatic(double** mat, int tid, int start, int end,
         mat[currRow][pivot] = 0;
       }
     }
+    b2.start();
     barrier->wait();
+    b2_time += b2.stop();
   }
 
   *time_taken = t.stop();
+  *barrier1_time = b1_time;
+  *barrier2_time = b2_time;
 }
 
 void forwardElimDynamic(double** mat, int tid, double* time_taken,
                         CustomBarrier* barrier,
                         std::atomic<bool>& singular_flag, DynamicMapping* dm,
-                        uint k, int* n_row_processed) {
+                        uint k, int* n_row_processed, double *barrier1_time,
+                       double *barrier2_time) {
   timer t;
+  timer b1;
+  timer b2;
+  double b1_time = 0.0;
+  double b2_time = 0.0;
   int row_processed = 0;
+
   t.start();
 
   for (int pivot = 0; pivot < size; pivot++) {
@@ -172,7 +191,9 @@ void forwardElimDynamic(double** mat, int tid, double* time_taken,
     }
 
     // If pivot is 0, all other threads need to wait until T0 swaps the rows
+    b1.start();
     barrier->wait();
+    b1_time += b1.stop();
     if (singular_flag == true) break;
 
     while (true) {
@@ -193,17 +214,26 @@ void forwardElimDynamic(double** mat, int tid, double* time_taken,
         if (currRow >= size) break;
       }
     }
+    b2.start();
     barrier->wait();
+    b2_time += b2.stop();
   }
 
   *time_taken = t.stop();
+  *barrier1_time = b1_time;
+  *barrier2_time = b2_time;
   *n_row_processed = row_processed;
 }
 
 void forwardElimEqual(double** mat, int tid, double* time_taken,
                       CustomBarrier* barrier, std::atomic<bool>& singular_flag,
-                      int* n_row_processed, uint n_threads) {
+                      int* n_row_processed, uint n_threads, double *barrier1_time,
+                       double *barrier2_time) {
   timer t;
+  timer b1;
+  timer b2;
+  double b1_time = 0.0;
+  double b2_time = 0.0;
   int row_processed = 0;
   t.start();
 
@@ -226,7 +256,9 @@ void forwardElimEqual(double** mat, int tid, double* time_taken,
     }
 
     // If pivot is 0, all other threads need to wait until T0 swaps the rows
+    b1.start();
     barrier->wait();
+    b1_time += b1.stop();
     if (singular_flag == true) break;
 
     // Determine how many rows to compute
@@ -247,10 +279,14 @@ void forwardElimEqual(double** mat, int tid, double* time_taken,
       mat[currRow][pivot] = 0;
       row_processed++;
     }
+    b2.start();
     barrier->wait();
+    b2_time += b2.stop();
   }
 
   *time_taken = t.stop();
+  *barrier1_time = b1_time;
+  *barrier2_time = b2_time;
   *n_row_processed = row_processed;
 }
 
@@ -280,6 +316,8 @@ void gaussian_elimination_parallel_static(double** mat, uint n_threads, uint pri
   double time_taken = 0.0;
   double x[size]; // An array to store solution
   double back_sub_time_taken = 0.0;
+  std::vector<double> barrier1_time(n_threads, 0.0);
+  std::vector<double> barrier2_time(n_threads, 0.0);
 
   // Create threads and distribute the work across T threads
   // -------------------------------------------------------------------
@@ -287,7 +325,7 @@ void gaussian_elimination_parallel_static(double** mat, uint n_threads, uint pri
   for (int i = 0; i < n_threads; i++) {
     threads.push_back(std::thread(forwardElimStatic, mat, i, start_row[i],
                                   end_row[i], &local_time_taken[i], &barrier,
-                                  std::ref(singular_flag)));
+                                  std::ref(singular_flag), &barrier1_time[i], &barrier2_time[i]));
   }
 
   for (std::thread& t : threads) {
@@ -325,11 +363,12 @@ void gaussian_elimination_parallel_static(double** mat, uint n_threads, uint pri
     for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
   }
 
+  std::cout << "Solution Validated\n";
   std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
             << "\n";
-  std::cout << "thread_id, starting row, ending row, time_taken" << std::endl;
+  std::cout << "thread_id, starting row, ending row, barrier1_time, barrier2_time, time_taken" << std::endl;
   for (uint i = 0; i < n_threads; i++) {
-    std::cout << i << ", " << start_row[i] << ", " << end_row[i] << ", "
+    std::cout << i << ", " << start_row[i] << ", " << end_row[i] << ", " << std::setprecision(TIME_PRECISION) << barrier1_time[i] << ", "  << barrier2_time[i] << ", "
               << local_time_taken[i] << std::endl;
   }
   std::cout << "Total Time taken (in seconds) : " << time_taken << "\n";
@@ -347,6 +386,8 @@ void gaussian_elimination_parallel_dynamic(double** mat, uint n_threads,
   double time_taken = 0.0;
   double x[size]; // An array to store solution
   double back_sub_time_taken = 0.0;
+  std::vector<double> barrier1_time(n_threads, 0.0);
+  std::vector<double> barrier2_time(n_threads, 0.0);
 
   // Create threads and distribute the work across T threads
   // -------------------------------------------------------------------
@@ -354,7 +395,7 @@ void gaussian_elimination_parallel_dynamic(double** mat, uint n_threads,
   for (int i = 0; i < n_threads; i++) {
     threads.push_back(
         std::thread(forwardElimDynamic, mat, i, &local_time_taken[i], &barrier,
-                    std::ref(singular_flag), &dm, k, &rows_processed[i]));
+                    std::ref(singular_flag), &dm, k, &rows_processed[i], &barrier1_time[i], &barrier2_time[i]));
   }
 
   for (std::thread& t : threads) {
@@ -391,11 +432,13 @@ void gaussian_elimination_parallel_dynamic(double** mat, uint n_threads,
     printf("\nSolution for the system:\n");
     for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
   }
+
+  std::cout << "Solution Validated\n";
   std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
             << "\n";
-  std::cout << "thread_id, num_rows, time_taken" << std::endl;
+  std::cout << "thread_id, num_rows, barrier1_time, barrier2_time, time_taken" << std::endl;
   for (uint i = 0; i < n_threads; i++) {
-    std::cout << i << ", " << rows_processed[i] << ", " << local_time_taken[i]
+    std::cout << i << ", " << rows_processed[i] << ", " << std::setprecision(TIME_PRECISION) << barrier1_time[i] << ", "  << barrier2_time[i] << ", " << local_time_taken[i]
               << std::endl;
   }
   std::cout << "Total Time taken (in seconds) : " << time_taken << "\n";
@@ -411,6 +454,8 @@ void gaussian_elimination_parallel_equal(double** mat, uint n_threads, uint prin
   double time_taken = 0.0;
   double x[size]; // An array to store solution
   double back_sub_time_taken = 0.0;
+  std::vector<double> barrier1_time(n_threads, 0.0);
+  std::vector<double> barrier2_time(n_threads, 0.0);
 
   // Create threads and distribute the work across T threads
   // -------------------------------------------------------------------
@@ -418,7 +463,7 @@ void gaussian_elimination_parallel_equal(double** mat, uint n_threads, uint prin
   for (int i = 0; i < n_threads; i++) {
     threads.push_back(
         std::thread(forwardElimEqual, mat, i, &local_time_taken[i], &barrier,
-                    std::ref(singular_flag), &rows_processed[i], n_threads));
+                    std::ref(singular_flag), &rows_processed[i], n_threads, &barrier1_time[i], &barrier2_time[i]));
   }
 
   for (std::thread& t : threads) {
@@ -456,11 +501,12 @@ void gaussian_elimination_parallel_equal(double** mat, uint n_threads, uint prin
     for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
   }
 
+  std::cout << "Solution Validated\n";
   std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
             << "\n";
-  std::cout << "thread_id, num_rows, time_taken" << std::endl;
+  std::cout << "thread_id, num_rows, barrier1_time, barrier2_time, time_taken" << std::endl;
   for (uint i = 0; i < n_threads; i++) {
-    std::cout << i << ", " << rows_processed[i] << ", " << local_time_taken[i]
+    std::cout << i << ", " << rows_processed[i] << ", " << std::setprecision(TIME_PRECISION) << barrier1_time[i] << ", "  << barrier2_time[i] << ", " << local_time_taken[i]
               << std::endl;
   }
   std::cout << "Total Time taken (in seconds) : " << time_taken << "\n";
