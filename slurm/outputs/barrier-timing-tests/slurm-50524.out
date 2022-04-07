@@ -1,0 +1,18 @@
+Number of Threads : 8
+Strategy : 3
+Granularity : 1
+Creating Empty 1000 x 1000 Matrix
+Reading Input File : /home/cwlui/cmpt431-project/inputs/generated.txt
+1000 x 1000 Matrix Read Into Memory
+Solution Validated
+Back Sub Time taken (in seconds) : 0.00170302
+thread_id, num_rows, barrier1_time, barrier2_time, time_taken
+0, 62000, 0.061625, 0.10865, 0.23478
+1, 62000, 0.052883, 0.11177, 0.23434
+2, 62000, 0.033708, 0.12958, 0.23432
+3, 62000, 0.027651, 0.13684, 0.23426
+4, 62000, 0.042653, 0.12027, 0.23424
+5, 62000, 0.028658, 0.13427, 0.23422
+6, 62000, 0.028303, 0.1355, 0.23417
+7, 65500, 0.12064, 0.043293, 0.23413
+Total Time taken (in seconds) : 0.23723
