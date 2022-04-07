@@ -17,7 +17,7 @@ int forwardElim(double** mat);
 void backSub(double** mat, double (&x)[size], double *back_sub_time_taken);
 
 // function to get matrix content
-void gaussianElimination(double** mat) {
+void gaussianElimination(double** mat, uint printSolution) {
   timer t1;
   double time_taken = 0.0;
   double x[size]; // An array to store solution
@@ -44,9 +44,18 @@ void gaussianElimination(double** mat) {
 
   time_taken = t1.stop();
   // -------------------------------------------------------------------
+  // verify solution
+  for (int i = 0; i < 1000; i++) {
+    assert(round(x[i]) == double(i*2 - 100));
+  }
+
   // Print Statistics
-  printf("\nSolution for the system:\n");
-  for (int i = 0; i < size; i++) printf("%lf\n", round(x[i]));
+  if (printSolution) {
+    printf("\nSolution for the system:\n");
+    for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
+  }
+
+  std::cout << "Solution Validated\n";
   std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken << "\n";
   std::cout << "Total Time taken (in seconds) : " << time_taken << "\n";
 }
@@ -129,10 +138,18 @@ int main(int argc, char* argv[]) {
                               {"inputFile", "Input graph file path",
                                cxxopts::value<std::string>()->default_value(
                                    "inputs/generated.txt")},
+                              {"printSolution", "Toggle for solution printing",
+                               cxxopts::value<uint>()->default_value("1")},
                           });
 
   auto cl_options = options.parse(argc, argv);
   std::string input_file_path = cl_options["inputFile"].as<std::string>();
+  uint printSolution = cl_options["printSolution"].as<uint>();
+
+  if (printSolution > 1) {
+    throw std::invalid_argument(
+      "The commandline argument: --printSolution can only be 0 (printing off) or 1 (printing on)");
+  }
 
   std::cout << "Number of Threads : 1" << std::endl;
   std::cout << "Creating Empty 1000 x 1000 Matrix\n";
@@ -155,7 +172,7 @@ int main(int argc, char* argv[]) {
 
   std::cout << "1000 x 1000 Matrix Filled In\n";
 
-  gaussianElimination(mat);
+  gaussianElimination(mat, printSolution);
   delete[] mat;
   return 0;
 }

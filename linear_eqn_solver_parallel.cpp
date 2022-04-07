@@ -132,7 +132,6 @@ void forwardElimStatic(double** mat, int tid, int start, int end,
         // subtract f * pivot row from currRow to reduce mat[currRow][pivot] to
         // 0
         double f = mat[currRow][pivot] / mat[pivot][pivot];
-        // TODO: Make this calculation local and then replace the entire row
         for (int j = pivot + 1; j <= size; j++) {
           mat[currRow][j] -= mat[pivot][j] * f;
         }
@@ -184,7 +183,6 @@ void forwardElimDynamic(double** mat, int tid, double* time_taken,
         // subtract f * pivot row from currRow to reduce mat[currRow][pivot] to
         // 0
         double f = mat[currRow][pivot] / mat[pivot][pivot];
-        // TODO: Make this calculation local and then replace the entire row
         for (int j = pivot + 1; j <= size; j++) {
           mat[currRow][j] -= mat[pivot][j] * f;
         }
@@ -243,7 +241,6 @@ void forwardElimEqual(double** mat, int tid, double* time_taken,
       // subtract f * pivot row from currRow to reduce mat[currRow][pivot] to
       // 0
       double f = mat[currRow][pivot] / mat[pivot][pivot];
-      // TODO: Make this calculation local and then replace the entire row
       for (int j = pivot + 1; j <= size; j++) {
         mat[currRow][j] -= mat[pivot][j] * f;
       }
@@ -257,7 +254,7 @@ void forwardElimEqual(double** mat, int tid, double* time_taken,
   *n_row_processed = row_processed;
 }
 
-void gaussian_elimination_parallel_static(double** mat, uint n_threads) {
+void gaussian_elimination_parallel_static(double** mat, uint n_threads, uint printSolution) {
   std::vector<std::thread> threads(n_threads);
 
   // Dividing up rows for n threads
@@ -317,8 +314,17 @@ void gaussian_elimination_parallel_static(double** mat, uint n_threads) {
   // -------------------------------------------------------------------
 
   // Print Statistics
-  printf("\nSolution for the system:\n");
-  for (int i = 0; i < size; i++) printf("%lf\n", round(x[i]));
+  // verify solution
+  for (int i = 0; i < 1000; i++) {
+    assert(round(x[i]) == double(i*2 - 100));
+  }
+
+  // Print Statistics
+  if (printSolution) {
+    printf("\nSolution for the system:\n");
+    for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
+  }
+
   std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
             << "\n";
   std::cout << "thread_id, starting row, ending row, time_taken" << std::endl;
@@ -330,7 +336,7 @@ void gaussian_elimination_parallel_static(double** mat, uint n_threads) {
 }
 
 void gaussian_elimination_parallel_dynamic(double** mat, uint n_threads,
-                                           uint k) {
+                                           uint k, uint printSolution) {
   std::vector<std::thread> threads(n_threads);
   std::vector<double> local_time_taken(n_threads, 0.0);
   std::vector<int> rows_processed(n_threads, 0);
@@ -375,8 +381,16 @@ void gaussian_elimination_parallel_dynamic(double** mat, uint n_threads,
   // -------------------------------------------------------------------
 
   // Print Statistics
-  printf("\nSolution for the system:\n");
-  for (int i = 0; i < size; i++) printf("%lf\n", round(x[i]));
+  // verify solution
+  for (int i = 0; i < 1000; i++) {
+    assert(round(x[i]) == double(i*2 - 100));
+  }
+
+  // Print Statistics
+  if (printSolution) {
+    printf("\nSolution for the system:\n");
+    for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
+  }
   std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
             << "\n";
   std::cout << "thread_id, num_rows, time_taken" << std::endl;
@@ -387,7 +401,7 @@ void gaussian_elimination_parallel_dynamic(double** mat, uint n_threads,
   std::cout << "Total Time taken (in seconds) : " << time_taken << "\n";
 }
 
-void gaussian_elimination_parallel_equal(double** mat, uint n_threads) {
+void gaussian_elimination_parallel_equal(double** mat, uint n_threads, uint printSolution) {
   std::vector<std::thread> threads(n_threads);
   std::vector<double> local_time_taken(n_threads, 0.0);
   std::vector<int> rows_processed(n_threads, 0);
@@ -431,8 +445,17 @@ void gaussian_elimination_parallel_equal(double** mat, uint n_threads) {
   // -------------------------------------------------------------------
 
   // Print Statistics
-  printf("\nSolution for the system:\n");
-  for (int i = 0; i < size; i++) printf("%lf\n", round(x[i]));
+  // verify solution
+  for (int i = 0; i < 1000; i++) {
+    assert(round(x[i]) == double(i*2 - 100));
+  }
+
+  // Print Statistics
+  if (printSolution) {
+    printf("\nSolution for the system:\n");
+    for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
+  }
+
   std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
             << "\n";
   std::cout << "thread_id, num_rows, time_taken" << std::endl;
@@ -458,6 +481,8 @@ int main(int argc, char* argv[]) {
            cxxopts::value<uint>()->default_value("1")},
           {"granularity", "Row Decomposition Granularity",
            cxxopts::value<uint>()->default_value("1")},
+          {"printSolution", "Toggle for solution printing",
+            cxxopts::value<uint>()->default_value("1")},
       });
 
   auto cl_options = options.parse(argc, argv);
@@ -465,6 +490,7 @@ int main(int argc, char* argv[]) {
   std::string input_file_path = cl_options["inputFile"].as<std::string>();
   uint strategy = cl_options["strategy"].as<uint>();
   uint k = cl_options["granularity"].as<uint>();
+  uint printSolution = cl_options["printSolution"].as<uint>();
 
   // Check edge cases on inputs
   if (n_threads <= 0) {
@@ -484,6 +510,11 @@ int main(int argc, char* argv[]) {
     throw std::invalid_argument(
         "The commandline argument: --granularity must be a positive integer "
         "value\n");
+  }
+
+  if (printSolution > 1) {
+    throw std::invalid_argument(
+      "The commandline argument: --printSolution can only be 0 (printing off) or 1 (printing on)");
   }
 
   std::cout << "Number of Threads : " << n_threads << std::endl;
@@ -511,16 +542,16 @@ int main(int argc, char* argv[]) {
 
   switch (strategy) {
     case 1:
-      gaussian_elimination_parallel_static(mat, n_threads);
+      gaussian_elimination_parallel_static(mat, n_threads, printSolution);
       break;
     case 2:
-      gaussian_elimination_parallel_dynamic(mat, n_threads, k);
+      gaussian_elimination_parallel_dynamic(mat, n_threads, k, printSolution);
       break;
     case 3:
-      gaussian_elimination_parallel_equal(mat, n_threads);
+      gaussian_elimination_parallel_equal(mat, n_threads, printSolution);
       break;
     default:
-      gaussian_elimination_parallel_static(mat, n_threads);
+      gaussian_elimination_parallel_static(mat, n_threads, printSolution);
   }
   delete[] mat;
   return 0;
