@@ -524,9 +524,9 @@ int main(int argc, char* argv[]) {
            cxxopts::value<std::string>()->default_value(
                "inputs/generated.txt")},
           {"strategy", "Task decomposition and mapping strategy",
-           cxxopts::value<uint>()->default_value("1")},
+           cxxopts::value<uint>()->default_value(DEFAULT_STRATEGY)},
           {"granularity", "Row Decomposition Granularity",
-           cxxopts::value<uint>()->default_value("1")},
+           cxxopts::value<uint>()->default_value(DEFAULT_GRANULARITY)},
           {"printSolution", "Toggle for solution printing",
             cxxopts::value<uint>()->default_value("1")},
       });
