@@ -352,17 +352,15 @@ void gaussian_elimination_parallel_static(double** mat, uint n_threads,
 
   time_taken = t1.stop();
   // -------------------------------------------------------------------
-
-  // Print Statistics
-  // verify solution
-  for (int i = 0; i < 1000; i++) {
-    assert(round(x[i]) == double(i * 2 - 100));
-  }
-
   // Print Statistics
   if (printSolution) {
     printf("\nSolution for the system:\n");
     for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
+  }
+
+  // verify solution
+  for (int i = 0; i < 1000; i++) {
+    assert(round(x[i]) == double(i * 2 - 100));
   }
 
   std::cout << "Solution Validated\n";
@@ -426,17 +424,15 @@ void gaussian_elimination_parallel_dynamic(double** mat, uint n_threads, uint k,
 
   time_taken = t1.stop();
   // -------------------------------------------------------------------
-
-  // Print Statistics
-  // verify solution
-  for (int i = 0; i < 1000; i++) {
-    assert(round(x[i]) == double(i * 2 - 100));
-  }
-
   // Print Statistics
   if (printSolution) {
     printf("\nSolution for the system:\n");
     for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
+  }
+
+  // verify solution
+  for (int i = 0; i < 1000; i++) {
+    assert(round(x[i]) == double(i * 2 - 100));
   }
 
   std::cout << "Solution Validated\n";
@@ -498,17 +494,15 @@ void gaussian_elimination_parallel_equal(double** mat, uint n_threads,
 
   time_taken = t1.stop();
   // -------------------------------------------------------------------
-
-  // Print Statistics
-  // verify solution
-  for (int i = 0; i < 1000; i++) {
-    assert(round(x[i]) == double(i * 2 - 100));
-  }
-
   // Print Statistics
   if (printSolution) {
     printf("\nSolution for the system:\n");
     for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
+  }
+
+  // verify solution
+  for (int i = 0; i < 1000; i++) {
+    assert(round(x[i]) == double(i * 2 - 100));
   }
 
   std::cout << "Solution Validated\n";
