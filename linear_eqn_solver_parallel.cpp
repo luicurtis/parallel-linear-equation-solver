@@ -263,10 +263,9 @@ void forwardElimEqual(double** mat, int tid, double* time_taken,
 
     // Determine how many rows to compute
     int min_rows_per_process = (size - pivot - 1) / n_threads;
-    int excess_rows = (size - pivot - 1) % n_threads;
     int start = (min_rows_per_process * tid) + pivot + 1;
     int end = (tid == n_threads - 1)
-                  ? (min_rows_per_process * (tid + 1)) + pivot + excess_rows
+                  ? size
                   : (min_rows_per_process * (tid + 1)) + pivot;
 
     for (int currRow = start; currRow <= end; currRow++) {
