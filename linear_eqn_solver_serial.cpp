@@ -56,7 +56,7 @@ void gaussianElimination(double** mat, uint printSolution) {
     for (int j = 0; j < size; j++) {
         sum += mat[i][j] * x[j];
     }
-    assert(abs(mat[i][size] - sum) / mat[i][size] <= 0.5);
+    assert(abs(mat[i][size] - sum) / mat[i][size] <= 0.005);
   }
   
   std::cout << "Solution Validated\n";
