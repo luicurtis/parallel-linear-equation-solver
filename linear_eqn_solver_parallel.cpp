@@ -358,8 +358,12 @@ void gaussian_elimination_parallel_static(double** mat, uint n_threads,
   }
 
   // verify solution
-  for (int i = 0; i < 1000; i++) {
-    assert(round(x[i]) == double(i * 2 - 100));
+  for (int i = 0; i < size; i++) {
+    double sum = 0;
+    for (int j = 0; j < size; j++) {
+        sum += mat[i][j] * x[j];
+    }
+    assert(abs(mat[i][size] - sum) / mat[i][size] <= 0.005);
   }
 
   std::cout << "Solution Validated\n";
@@ -430,8 +434,12 @@ void gaussian_elimination_parallel_dynamic(double** mat, uint n_threads, uint k,
   }
 
   // verify solution
-  for (int i = 0; i < 1000; i++) {
-    assert(round(x[i]) == double(i * 2 - 100));
+  for (int i = 0; i < size; i++) {
+    double sum = 0;
+    for (int j = 0; j < size; j++) {
+        sum += mat[i][j] * x[j];
+    }
+    assert(abs(mat[i][size] - sum) / mat[i][size] <= 0.005);
   }
 
   std::cout << "Solution Validated\n";
@@ -500,8 +508,12 @@ void gaussian_elimination_parallel_equal(double** mat, uint n_threads,
   }
 
   // verify solution
-  for (int i = 0; i < 1000; i++) {
-    assert(round(x[i]) == double(i * 2 - 100));
+  for (int i = 0; i < size; i++) {
+    double sum = 0;
+    for (int j = 0; j < size; j++) {
+        sum += mat[i][j] * x[j];
+    }
+    assert(abs(mat[i][size] - sum) / mat[i][size] <= 0.005);
   }
 
   std::cout << "Solution Validated\n";
@@ -528,9 +540,9 @@ int main(int argc, char* argv[]) {
           {"inputFile", "Input graph file path",
            cxxopts::value<std::string>()->default_value(
                "inputs/generated.txt")},
-          {"strategy", "Task decomposition and mapping strategy",
+          {"strategy", "Task mapping strategy",
            cxxopts::value<uint>()->default_value(DEFAULT_STRATEGY)},
-          {"granularity", "Row Decomposition Granularity",
+          {"granularity", "Row mapping Granularity",
            cxxopts::value<uint>()->default_value(DEFAULT_GRANULARITY)},
           {"printSolution", "Toggle for solution printing",
            cxxopts::value<uint>()->default_value("1")},

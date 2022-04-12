@@ -44,17 +44,21 @@ void gaussianElimination(double** mat, uint printSolution) {
 
   time_taken = t1.stop();
   // -------------------------------------------------------------------
-  // verify solution
-  for (int i = 0; i < 1000; i++) {
-    assert(round(x[i]) == double(i * 2 - 100));
-  }
-
   // Print Statistics
   if (printSolution) {
     printf("\nSolution for the system:\n");
-    for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
+    for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, x[i]);
   }
 
+  // verify solution
+  for (int i = 0; i < size; i++) {
+    double sum = 0;
+    for (int j = 0; j < size; j++) {
+        sum += mat[i][j] * x[j];
+    }
+    assert(abs(mat[i][size] - sum) / mat[i][size] <= 0.005);
+  }
+  
   std::cout << "Solution Validated\n";
   std::cout << "Back Sub Time taken (in seconds) : " << back_sub_time_taken
             << "\n";
