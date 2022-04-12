@@ -1,0 +1,9 @@
+Creating Empty 1000 x 1000 Matrix
+Thread:0, bTime:0.003059, cTime:1.304421
+Thread:1, bTime:0.232138, cTime:0.207820
+Thread:2, bTime:0.190245, cTime:0.412945
+Thread:3, bTime:0.519573, cTime:0.888528
+Total Time taken (in seconds) : 2.40283
+
+Solution for the system:
+Solution Validated
