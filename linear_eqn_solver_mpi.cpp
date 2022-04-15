@@ -217,9 +217,14 @@ void gaussian_elimination_mpi(double** mat, int world_rank, int world_size) {
     printf("\nSolution for the system:\n");
     //for (int i = 0; i < size; i++) printf("x[%d]: %lf\n", i, round(x[i]));
     // verify solution
-    for (int i = 0; i < 1000; i++) {
-      assert(round(x[i]) == double(i * 2 - 100));
+    for (int i = 0; i < size; i++) {
+      double sum = 0;
+      for (int j = 0; j < size; j++) {
+          sum += mat[i][j] * x[j];
+      }
+      assert(abs(mat[i][size] - sum) / mat[i][size] <= 0.005);
     }
+
     cout << "Solution Validated\n";
   }
   // -------------------------------------------------------------------
