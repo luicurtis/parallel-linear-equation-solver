@@ -5,4 +5,4 @@
 #SBATCH --mem=2G
 #SBATCH --partition=slow
 
-srun /home/cwlui/cmpt431-project/linear_eqn_solver_serial --printSolution 0 --inputFile /home/cwlui/cmpt431-project/inputs/generated.txt
+srun ./linear_eqn_solver_serial --printSolution 0 --inputFile ./inputs/generated.txt
